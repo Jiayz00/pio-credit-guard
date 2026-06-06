@@ -1,0 +1,18 @@
+﻿@pioneerCreditRoot {
+  path /admin/pioneer-credit
+}
+handle @pioneerCreditRoot {
+  redir * /admin/pioneer-credit/ 308
+}
+
+handle /admin/pioneer-credit/* {
+  reverse_proxy 127.0.0.1:18994 {
+    header_up Host {host}
+    header_up X-Real-IP {remote_host}
+    header_up X-Forwarded-For {remote_host}
+    header_up X-Forwarded-Proto {scheme}
+    header_up X-Forwarded-Host {host}
+    header_up X-Internal-Proxy-Secret {$PIONEER_CREDIT_GUARD_PROXY_SECRET}
+    flush_interval -1
+  }
+}

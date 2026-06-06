@@ -1,0 +1,27 @@
+node_modules/
+.env
+
+# 运行时数据：数据库、浏览器授权资料、日志、失败截图。
+data/
+logs/
+screenshots/
+browser-profile/
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+*.log
+
+# Playwright / 测试输出。
+playwright-report/
+test-results/
+
+# 本地打包产物和私有品牌图片。
+*.tgz
+*.tar.gz
+*.png
+*.jpg
+*.jpeg
+*.webp

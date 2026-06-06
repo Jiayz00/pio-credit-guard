@@ -1,0 +1,249 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pioneer Credit Guard</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body class="auth-pending">
+  <main class="app">
+    <header class="topbar">
+      <div>
+        <h1>Pioneer Credit Guard</h1>
+        <p>Pioneer credit rules 内部自动化</p>
+      </div>
+      <div class="header-actions">
+        <button id="refreshBtn" class="btn secondary">刷新</button>
+        <a class="btn ghost" href="/admin/accounts">返回账号页</a>
+      </div>
+    </header>
+
+    <section class="status-grid">
+      <div class="status-card">
+        <span class="label">授权状态</span>
+        <strong id="authStatus">-</strong>
+        <small id="authMeta">-</small>
+      </div>
+      <div class="status-card">
+        <span class="label">后台任务</span>
+        <strong id="workerStatus">-</strong>
+        <small id="workerMeta">-</small>
+      </div>
+      <div class="status-card">
+        <span class="label">最近检查</span>
+        <strong id="lastCheck">-</strong>
+        <small id="lastResult">-</small>
+      </div>
+      <div class="status-card">
+        <span class="label">失败次数</span>
+        <strong id="failures">0</strong>
+        <small id="lastError">-</small>
+      </div>
+    </section>
+
+    <section class="layout">
+      <form id="configForm" class="panel">
+        <div class="panel-title">
+          <h2>配置</h2>
+          <span id="saveState" class="muted"></span>
+        </div>
+
+        <label class="toggle-row">
+          <span>
+            <strong>启用自动修复</strong>
+            <small>仅在刷新检查确认不匹配后才会自动修复。</small>
+          </span>
+          <input id="enabled" type="checkbox">
+        </label>
+
+        <div class="field-row">
+          <label>
+            <span>Mode</span>
+            <select id="mode">
+              <option value="add">Add</option>
+              <option value="restore">Restore</option>
+            </select>
+          </label>
+          <label>
+            <span>Add credits</span>
+            <input id="addCredits" type="number" min="0" step="0.01">
+          </label>
+          <label>
+            <span>Charge when remaining drops below</span>
+            <input id="threshold" type="number" min="0" step="0.01">
+          </label>
+        </div>
+
+        <div class="field-row">
+          <label>
+            <span>常规检查间隔，秒</span>
+            <input id="checkInterval" type="number" min="30" step="1">
+          </label>
+          <label>
+            <span>失败暂停阈值</span>
+            <input id="failureThreshold" type="number" min="1" step="1">
+          </label>
+          <label>
+            <span>修复前确认次数</span>
+            <input id="repairConfirmations" type="number" min="1" max="5" step="1">
+          </label>
+        </div>
+
+        <div class="section-title">
+          <h3>监控时间段</h3>
+          <small>时间段外会关闭后台浏览器进程，仅保留登录资料。</small>
+        </div>
+        <div class="field-row">
+          <label>
+            <span>监控模式</span>
+            <select id="monitorScheduleMode">
+              <option value="all_day">全天监控</option>
+              <option value="custom">自定义时间段</option>
+            </select>
+          </label>
+          <label data-monitor-custom>
+            <span>监控开始时间</span>
+            <input id="monitorStart" type="time">
+          </label>
+          <label data-monitor-custom>
+            <span>监控结束时间</span>
+            <input id="monitorEnd" type="time">
+          </label>
+        </div>
+        <p class="inline-hint" data-monitor-custom>例如 23:00 - 02:00 表示跨天监控。</p>
+
+        <label class="toggle-row compact">
+          <span>
+            <strong>手动高风险时间段</strong>
+            <small>只影响检查频率，不决定是否全天运行。</small>
+          </span>
+          <input id="highRiskEnabled" type="checkbox">
+        </label>
+
+        <div class="field-row">
+          <label>
+            <span>高风险开始时间</span>
+            <input id="highRiskStart" type="time">
+          </label>
+          <label>
+            <span>高风险结束时间</span>
+            <input id="highRiskEnd" type="time">
+          </label>
+          <label>
+            <span>高风险检查间隔，秒</span>
+            <input id="highRiskInterval" type="number" min="15" step="1">
+          </label>
+        </div>
+
+        <label class="toggle-row compact">
+          <span>
+            <strong>自动高风险学习</strong>
+            <small>开启后连续 48 小时全天监督，自动判断高风险时间段。</small>
+          </span>
+          <input id="autoHighRiskEnabled" type="checkbox">
+        </label>
+
+        <div class="field-row">
+          <label>
+            <span>学习完成后处理方式</span>
+            <select id="autoHighRiskApplyMode">
+              <option value="suggest_only">只生成建议</option>
+              <option value="auto_apply">自动应用为监控时间段</option>
+            </select>
+          </label>
+          <label>
+            <span>学习期检查间隔，秒</span>
+            <input id="learningInterval" type="number" min="30" step="1">
+          </label>
+          <label>
+            <span>修复冷却时间，秒</span>
+            <input id="repairCooldown" type="number" min="0" step="1">
+          </label>
+        </div>
+
+        <div class="learning-box">
+          <div>
+            <strong>学习状态</strong>
+            <span id="learningStatus">-</span>
+          </div>
+          <div>
+            <strong>学习时间</strong>
+            <span id="learningWindow">-</span>
+          </div>
+          <div>
+            <strong>推荐时间段</strong>
+            <span id="learningRecommendation">-</span>
+          </div>
+          <div>
+            <strong>样本与置信度</strong>
+            <span id="learningConfidence">-</span>
+          </div>
+          <div class="learning-actions">
+            <button id="applyLearning" class="btn secondary small" type="button">应用建议</button>
+            <button id="restartLearning" class="btn secondary small" type="button">重新学习</button>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn primary" type="submit">保存配置</button>
+        </div>
+      </form>
+
+      <section class="panel actions-panel">
+        <div class="panel-title">
+          <h2>操作</h2>
+        </div>
+        <div class="button-grid">
+          <button id="authStart" class="btn primary">授权登录</button>
+          <button id="authCancel" class="btn secondary">取消授权</button>
+          <button id="authVerify" class="btn secondary">验证授权</button>
+          <button id="workerStart" class="btn primary">启动任务</button>
+          <button id="workerStop" class="btn danger">停止任务</button>
+          <button id="checkNow" class="btn secondary">立即检查</button>
+          <button id="repairNow" class="btn warning">立即修复</button>
+        </div>
+        <div class="notice">
+          每次检查都会先刷新 <code>/credits</code>，只使用本次刷新得到的响应或 DOM。
+        </div>
+      </section>
+    </section>
+
+    <section id="authBrowserPanel" class="panel browser-panel hidden">
+      <div class="panel-title">
+        <div>
+          <h2>授权浏览器</h2>
+          <span id="authBrowserMeta" class="muted">当前没有授权浏览器</span>
+        </div>
+        <div class="browser-actions">
+          <button id="authBrowserReload" class="btn secondary small" type="button">重新加载页面</button>
+          <button id="authBrowserRefresh" class="btn secondary small" type="button">刷新视图</button>
+        </div>
+      </div>
+      <div class="browser-frame">
+        <img id="authBrowserImage" alt="授权浏览器截图">
+      </div>
+      <p class="browser-hint">点击画面后可直接使用键盘和滚轮；实时连接失败时会自动切回手动刷新视图。</p>
+      <form id="authBrowserForm" class="browser-form">
+        <input id="authBrowserText" type="text" autocomplete="off" placeholder="输入到当前聚焦的字段">
+        <button class="btn secondary" type="submit">输入</button>
+        <button id="authBrowserEnter" class="btn secondary" type="button">Enter</button>
+        <button id="authBrowserTab" class="btn secondary" type="button">Tab</button>
+        <button id="authBrowserEsc" class="btn secondary" type="button">Esc</button>
+      </form>
+    </section>
+
+    <section class="panel logs-panel">
+      <div class="panel-title">
+        <h2>最近日志</h2>
+        <button id="logsRefresh" class="btn secondary small">刷新日志</button>
+      </div>
+      <div id="logs" class="logs"></div>
+    </section>
+  </main>
+
+  <script src="./app.js" type="module"></script>
+</body>
+</html>
+
+

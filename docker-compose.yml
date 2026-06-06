@@ -1,0 +1,30 @@
+﻿services:
+  pioneer-credit-guard:
+    build: .
+    container_name: pioneer-credit-guard
+    restart: unless-stopped
+    init: true
+    env_file:
+      - .env
+    environment:
+      HOST: "0.0.0.0"
+      PORT: "18994"
+      DATA_DIR: "/app/data"
+      PUBLIC_BASE_PATH: "/admin/pioneer-credit"
+      SUB_BASE_URL: "${SUB_BASE_URL:-http://sub-admin:8080}"
+      SUB_ADMIN_VERIFY_PATH: "/api/v1/auth/me"
+      AUTH_REQUIRED: "true"
+      BROWSER_HEADLESS: "true"
+      HEADED_AUTH: "false"
+    ports:
+      - "127.0.0.1:18994:18994"
+    volumes:
+      - ./data:/app/data
+    networks:
+      - sub2api-network
+
+networks:
+  sub2api-network:
+    external: true
+    name: ${SUB2API_NETWORK:-sub2api-network}
+

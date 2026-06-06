@@ -1,0 +1,22 @@
+{
+  "name": "pioneer-credit-guard",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "check": "node --check src/server.js && node --check src/db.js && node --check src/auth.js && node --check src/worker.js && node --check src/config.js"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "dependencies": {
+    "dotenv": "^16.5.0",
+    "express": "^4.21.2",
+    "morgan": "^1.10.0",
+    "playwright": "1.60.0",
+    "ws": "^8.21.0",
+    "zod": "^3.24.4"
+  }
+}
